@@ -8,11 +8,13 @@ edition = "2021"
 async-trait = "0.1.64"
 aws-config = "0.54.1"
 aws-sdk-dynamodb = "0.24.0"
+aws-sdk-eventbridge = "0.24.0"
 aws-smithy-client = { version = "0.54.4", features = ["test-util"] }
 aws-smithy-http = "0.54.4"
 base64 = "0.21.0"
 chrono = { version = "0.4.23", features = ["serde"] }
 diesel = { version = "2.0.3", features = ["chrono"] }
+futures = "0.3.26"
 http = "0.2.9"
 lambda_http = "0.7"
 lambda_runtime = "0.7"

@@ -1,4 +1,4 @@
-use crate::{model::TestRun, error::Error};
+use crate::{error::Error, model::TestRun};
 use async_trait::async_trait;
 
 mod dynamodb;

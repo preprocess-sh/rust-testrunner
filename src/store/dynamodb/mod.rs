@@ -3,11 +3,11 @@
 //! Store implementation using the AWS SDK for DynamoDB.
 
 use super::{Store, StoreDelete, StoreGet, StorePut};
-use crate::{model::TestRun, error::Error};
+use crate::{error::Error, model::TestRun};
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{model::AttributeValue, Client};
 use lambda_http::aws_lambda_events::serde_json::Value;
-use serde::{Deserialize, de::value::MapDeserializer};
+use serde::{de::value::MapDeserializer, Deserialize};
 use std::collections::HashMap;
 use tracing::{info, instrument};
 
@@ -113,9 +113,15 @@ impl From<&TestRun> for HashMap<String, AttributeValue> {
 
         let mut retval = HashMap::new();
         retval.insert("id".to_owned(), AttributeValue::S(value.id.clone()));
-        retval.insert("language".to_owned(), AttributeValue::S(value.language.to_owned()));
+        retval.insert(
+            "language".to_owned(),
+            AttributeValue::S(value.language.to_owned()),
+        );
         retval.insert("payload".to_owned(), AttributeValue::S(payload));
-        retval.insert("status".to_owned(), AttributeValue::S(value.status.to_owned()));
+        retval.insert(
+            "status".to_owned(),
+            AttributeValue::S(value.status.to_owned()),
+        );
 
         retval
     }
@@ -129,7 +135,8 @@ impl TryFrom<HashMap<String, AttributeValue>> for TestRun {
     /// This could fail as the DynamoDB item might be missing some fields.
     fn try_from(value: HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
         // Transform the JSON string into a HashMap<String, String>
-        let payload: HashMap<String, String> = serde_json::from_str(value.get("payload").unwrap().as_s().unwrap()).unwrap();
+        let payload: HashMap<String, String> =
+            serde_json::from_str(value.get("payload").unwrap().as_s().unwrap()).unwrap();
 
         Ok(TestRun {
             id: value
