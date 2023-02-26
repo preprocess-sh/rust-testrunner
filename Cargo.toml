@@ -1,6 +1,6 @@
 [package]
 author = "preprocess.sh"
-name = "rust-testrunner-lambda"
+name = "testrunner"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,14 +16,37 @@ chrono = { version = "0.4.23", features = ["serde"] }
 diesel = { version = "2.0.3", features = ["chrono"] }
 futures = "0.3.26"
 http = "0.2.9"
-lambda_http = "0.7"
-lambda_runtime = "0.7"
+lambda_http = { version = "0.7", optional = true }
+lambda_runtime = { version = "0.7", optional = true }
+rayon = { version = "1.6.1", optional = true }
 serde = "1.0.152"
 serde_json = "1.0.93"
 serde_with = "2.2.0"
 tempfile = "3.3.0"
 tokio = { version = "1", features = ["macros"] }
 tracing = { version = "0.1", features = ["log"] }
-tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "json"] }
 zip = "0.6.4"
+
+[features]
+default = ["lambda"]
+lambda = ["lambda_runtime", "lambda_http", "rayon"]
+
+[[bin]]
+name = "dynamodb-streams"
+path = "src/bin/lambda/dynamodb-streams.rs"
+test = false
+required-features = ["lambda"]
+
+[[bin]]
+name = "get-testrun"
+path = "src/bin/lambda/get-testrun.rs"
+test = false
+required-features = ["lambda"]
+
+[[bin]]
+name = "put-testrun"
+path = "src/bin/lambda/put-testrun.rs"
+test = false
+required-features = ["lambda"]
 

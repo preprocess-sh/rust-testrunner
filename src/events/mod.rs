@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use crate::error::Error;
 
-mod eventbridge;
+pub mod eventbridge;
 
 #[async_trait]
 pub trait EventBus {

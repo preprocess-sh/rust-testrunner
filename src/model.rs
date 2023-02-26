@@ -15,17 +15,17 @@ pub struct TestRun {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum Event {
-    Created { test_run: TestRun },
+    Created { testrun: TestRun },
     Updated { old: TestRun, new: TestRun },
-    Deleted { test_run: TestRun },
+    Deleted { testrun: TestRun },
 }
 
 impl Event {
     pub fn id(&self) -> &str {
         match self {
-            Event::Created { test_run } => test_run.id.as_str(),
+            Event::Created { testrun } => testrun.id.as_str(),
             Event::Updated { new, .. } => new.id.as_str(),
-            Event::Deleted { test_run } => test_run.id.as_str(),
+            Event::Deleted { testrun } => testrun.id.as_str(),
         }
     }
 }

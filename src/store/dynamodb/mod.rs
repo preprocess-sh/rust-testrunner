@@ -76,12 +76,12 @@ impl StoreGet for DynamoDBStore {
 impl StorePut for DynamoDBStore {
     /// Create or update an item
     #[instrument(skip(self))]
-    async fn put(&self, test_run: &TestRun) -> Result<(), Error> {
-        info!("Putting item with id '{}' into DynamoDB table", test_run.id);
+    async fn put(&self, testrun: &TestRun) -> Result<(), Error> {
+        info!("Putting item with id '{}' into DynamoDB table", testrun.id);
         self.client
             .put_item()
             .table_name(&self.table_name)
-            .set_item(Some(test_run.into()))
+            .set_item(Some(testrun.into()))
             .send()
             .await?;
 
@@ -156,7 +156,7 @@ impl TryFrom<HashMap<String, AttributeValue>> for TestRun {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Error;
+    use crate::error::Error;
     use aws_sdk_dynamodb::{Client, Config, Credentials, Region};
     use aws_smithy_client::{erase::DynConnector, test_connection::TestConnection};
     use aws_smithy_http::body::SdkBody;

@@ -16,7 +16,7 @@ pub trait StoreGet: Send + Sync {
 /// Trait for storing a single testrun
 #[async_trait]
 pub trait StorePut: Send + Sync {
-    async fn put(&self, test_run: &TestRun) -> Result<(), Error>;
+    async fn put(&self, testrun: &TestRun) -> Result<(), Error>;
 }
 
 /// Trait for deleting a single testrun
