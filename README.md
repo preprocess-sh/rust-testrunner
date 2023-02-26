@@ -5,7 +5,7 @@ Preprocess supports code challenges that are validated by a testsuite for comple
 
 This is achieved by using a Lambda function that takes the user's code as input along with the pre-defined testsuite that is attached to the Challenge the user has completed.
 
-This repository contains the source of the function used to test the user's code against the testsuite.
+This repository contains the source of the functions that are used to manage testruns. They are responsible for delegating the job of processing to a testrunner.
 
 ## Which languages does it support?
 Preprocess is currently supporting code challenges based on C, C++, Go, Python, PHP, Ruby and Rust.
