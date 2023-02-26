@@ -8,15 +8,13 @@ This is achieved by using a Lambda function that takes the user's code as input 
 This repository contains the source of the function used to test the user's code against the testsuite.
 
 ## Which languages does it support?
-Preprocess is currently supporting code challenges based on Rust, C, C++, C#, Go, Python and PHP.
+Preprocess is currently supporting code challenges based on C, C++, Go, Python, PHP, Ruby and Rust.
 Support is planned for the following languages:
-- Erlang
 - Haskell
 - Julia
 - Lisp
 - Perl
 - R
-- Ruby
 
 ## How does the client know when the tests are complete?
 There is a separate function with the responsibilty of managing a queue of test tasks, that will then invoke the actual testrunner for the language that the user's code is written in.
