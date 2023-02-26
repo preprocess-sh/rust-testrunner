@@ -107,10 +107,10 @@ pub async fn put_testrun(
     Ok(match res {
         // Testrun created
         Ok(_) => {
-            info!("Created testrun {:?}", testrun.id);
+            info!("Queued testrun {:?}", testrun.id);
             response(
                 StatusCode::CREATED,
-                json!({"message": "Testrun created"}).to_string(),
+                json!({"message": "Testrun queued"}).to_string(),
             )
         }
         // Error creating testrun

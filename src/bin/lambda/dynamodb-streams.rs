@@ -1,5 +1,8 @@
 use lambda_runtime::{service_fn, LambdaEvent};
-use testrunner::{utils::{setup_tracing, get_event_bus}, entrypoints::lambda::dynamodb::{model::DynamoDBEvent, parse_events}};
+use testrunner::{
+    entrypoints::lambda::dynamodb::{model::DynamoDBEvent, parse_events},
+    utils::{get_event_bus, setup_tracing},
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
@@ -13,7 +16,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     lambda_runtime::run(service_fn(|event: LambdaEvent<DynamoDBEvent>| {
         let (event, ctx) = event.into_parts();
         parse_events(&event_bus, event, ctx)
-    })).await?;
-    
+    }))
+    .await?;
+
     Ok(())
 }

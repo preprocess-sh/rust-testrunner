@@ -1,5 +1,5 @@
 use lambda_http::{service_fn, Request};
-use testrunner::{entrypoints::lambda::apigateway::{put_testrun}, utils::*};
+use testrunner::{entrypoints::lambda::apigateway::put_testrun, utils::*};
 
 type E = Box<dyn std::error::Error + Send + Sync + 'static>;
 

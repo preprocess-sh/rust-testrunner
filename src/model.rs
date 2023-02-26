@@ -3,13 +3,25 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Test {
+    pub message: String,
+    pub name: String,
+    pub status: String,
+
+    pub actual_output: String,
+    pub expected_output: String,
+}
+
 #[serde_as]
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct TestRun {
     pub id: String,
+    pub files: HashMap<String, String>,
     pub language: String,
-    pub payload: HashMap<String, String>,
     pub status: String,
+    pub tests: Vec<Test>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

@@ -7,7 +7,7 @@
 
 use crate::{
     error::Error,
-    model::{Event, TestRun},
+    model::{Event, Test, TestRun},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -167,13 +167,26 @@ impl TryFrom<&HashMap<String, AttributeValue>> for TestRun {
     ///
     /// This could fail as the DynamoDB item might be missing some fields.
     fn try_from(value: &HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
-        let payload: String = value
-            .get("payload")
-            .ok_or(Error::InternalError("Missing payload"))?
+        // Convert the files attribute to a HashMap
+        let files_json: String = value
+            .get("files")
+            .ok_or(Error::InternalError("Missing files"))?
             .as_s()
-            .ok_or(Error::InternalError("payload is not a string"))?
+            .ok_or(Error::InternalError("files is not a string"))?
             .to_string();
-        let payload_hashmap: HashMap<String, String> = serde_json::from_str(&payload)
+
+        let files: HashMap<String, String> = serde_json::from_str(&files_json)
+            .map_err(|e| Error::InternalError("Couldn't parse HashMap from payload"))?;
+
+        // Convert the tests attribute to a Vec<Test>
+        let tests_json: String = value
+            .get("tests")
+            .ok_or(Error::InternalError("Missing tests"))?
+            .as_s()
+            .ok_or(Error::InternalError("tests is not a string"))?
+            .to_string();
+
+        let tests: Vec<Test> = serde_json::from_str(&tests_json)
             .map_err(|e| Error::InternalError("Couldn't parse HashMap from payload"))?;
 
         Ok(TestRun {
@@ -189,13 +202,14 @@ impl TryFrom<&HashMap<String, AttributeValue>> for TestRun {
                 .as_s()
                 .ok_or(Error::InternalError("language is not a string"))?
                 .to_string(),
-            payload: payload_hashmap,
+            files,
             status: value
                 .get("status")
                 .ok_or(Error::InternalError("Missing status"))?
                 .as_s()
                 .ok_or(Error::InternalError("status is not a string"))?
                 .to_string(),
+            tests,
         })
     }
 }

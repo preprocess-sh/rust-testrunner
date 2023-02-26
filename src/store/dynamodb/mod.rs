@@ -3,7 +3,10 @@
 //! Store implementation using the AWS SDK for DynamoDB.
 
 use super::{Store, StoreDelete, StoreGet, StorePut};
-use crate::{error::Error, model::TestRun};
+use crate::{
+    error::Error,
+    model::{Test, TestRun},
+};
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{model::AttributeValue, Client};
 use lambda_http::aws_lambda_events::serde_json::Value;
@@ -109,7 +112,7 @@ impl StoreDelete for DynamoDBStore {
 impl From<&TestRun> for HashMap<String, AttributeValue> {
     /// Convert a &Product into a DynamoDB item
     fn from(value: &TestRun) -> HashMap<String, AttributeValue> {
-        let payload: String = serde_json::to_string(&value.payload).unwrap();
+        let payload: String = serde_json::to_string(&value.files).unwrap();
 
         let mut retval = HashMap::new();
         retval.insert("id".to_owned(), AttributeValue::S(value.id.clone()));
@@ -134,9 +137,11 @@ impl TryFrom<HashMap<String, AttributeValue>> for TestRun {
     ///
     /// This could fail as the DynamoDB item might be missing some fields.
     fn try_from(value: HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
-        // Transform the JSON string into a HashMap<String, String>
-        let payload: HashMap<String, String> =
-            serde_json::from_str(value.get("payload").unwrap().as_s().unwrap()).unwrap();
+        let files: HashMap<String, String> =
+            serde_json::from_str(value.get("files").unwrap().as_s().unwrap()).unwrap();
+
+        let tests: Vec<Test> =
+            serde_json::from_str(value.get("tests").unwrap().as_s().unwrap()).unwrap();
 
         Ok(TestRun {
             id: value
@@ -145,10 +150,11 @@ impl TryFrom<HashMap<String, AttributeValue>> for TestRun {
             language: value
                 .get_s("language")
                 .ok_or(Error::InternalError("Missing language"))?,
-            payload,
+            files,
             status: value
                 .get_s("status")
                 .ok_or(Error::InternalError("Missing status"))?,
+            tests,
         })
     }
 }
@@ -185,157 +191,4 @@ mod tests {
                 "https://dynamodb.eu-west-1.amazonaws.com/",
             ))
     }
-
-    // #[tokio::test]
-    // async fn test_all_next() -> Result<(), Error> {
-    //     // GIVEN a DynamoDBStore with a last evaluated key
-    //     let conn = TestConnection::new(vec![(
-    //         get_request_builder()
-    //             .header("x-amz-target", "DynamoDB_20120810.Scan")
-    //             .body(SdkBody::from(r#"{"TableName":"test","Limit":20}"#))
-    //             .unwrap(),
-    //         http::Response::builder()
-    //             .status(200)
-    //             .body(SdkBody::from(
-    //                 r#"{"Items": [], "LastEvaluatedKey": {"id": {"S": "1"}}}"#,
-    //             ))
-    //             .unwrap(),
-    //     )]);
-    //     let client =
-    //         Client::from_conf_conn(get_mock_config().await, DynConnector::new(conn.clone()));
-    //     let store = DynamoDBStore::new(client, "test".to_string());
-
-    //     // WHEN getting all items
-    //     let res = store.all(None).await?;
-
-    //     // THEN the response has a next key
-    //     assert_eq!(res.next, Some("1".to_string()));
-    //     // AND the request matches the expected request
-    //     conn.assert_requests_match(&vec![]);
-
-    //     Ok(())
-    // }
-
-    // #[tokio::test]
-    // async fn test_delete() -> Result<(), Error> {
-    //     // GIVEN a DynamoDBStore
-    //     let conn = TestConnection::new(vec![(
-    //         get_request_builder()
-    //             .header("x-amz-target", "DynamoDB_20120810.DeleteItem")
-    //             .body(SdkBody::from(
-    //                 r#"{"TableName": "test", "Key": {"id": {"S": "1"}}}"#,
-    //             ))
-    //             .unwrap(),
-    //         http::Response::builder()
-    //             .status(200)
-    //             .body(SdkBody::from("{}"))
-    //             .unwrap(),
-    //     )]);
-    //     let client =
-    //         Client::from_conf_conn(get_mock_config().await, DynConnector::new(conn.clone()));
-    //     let store = DynamoDBStore::new(client, "test".to_string());
-
-    //     // WHEN deleting an item
-    //     store.delete("1").await?;
-
-    //     // THEN the request matches the expected request
-    //     conn.assert_requests_match(&vec![]);
-
-    //     Ok(())
-    // }
-
-    // #[tokio::test]
-    // async fn test_get() -> Result<(), Error> {
-    //     // GIVEN a DynamoDBStore with one item
-    //     let conn = TestConnection::new(vec![(
-    //         get_request_builder()
-    //             .header("x-amz-target", "DynamoDB_20120810.GetItem")
-    //             .body(SdkBody::from(r#"{"TableName": "test", "Key": {"id": {"S": "1"}}}"#))
-    //             .unwrap(),
-    //         http::Response::builder()
-    //             .status(200)
-    //             .body(SdkBody::from(r#"{"Item": {"id": {"S": "1"}, "name": {"S": "test1"}, "price": {"N": "1.0"}}}"#))
-    //             .unwrap(),
-    //     )]);
-    //     let client =
-    //         Client::from_conf_conn(get_mock_config().await, DynConnector::new(conn.clone()));
-    //     let store = DynamoDBStore::new(client, "test".to_string());
-
-    //     // WHEN getting an item
-    //     let res = store.get("1").await?;
-
-    //     // THEN the response has the correct values
-    //     if let Some(product) = res {
-    //         assert_eq!(product.id, "1");
-    //         assert_eq!(product.name, "test1");
-    //         assert_eq!(product.price, 1.0);
-    //     } else {
-    //         panic!("Expected product to be Some");
-    //     }
-    //     // AND the request matches the expected request
-    //     conn.assert_requests_match(&vec![]);
-
-    //     Ok(())
-    // }
-
-    // #[tokio::test]
-    // async fn test_put() -> Result<(), Error> {
-    //     // GIVEN an empty DynamoDBStore and a product
-    //     let conn = TestConnection::new(vec![(
-    //         get_request_builder()
-    //             .header("x-amz-target", "DynamoDB_20120810.PutItem")
-    //             .body(SdkBody::from(r#"{"TableName":"test","Item":{"id":{"S":"1"},"name":{"S":"test1"},"price":{"N":"1.5"}}}"#))
-    //             .unwrap(),
-    //         http::Response::builder()
-    //             .status(200)
-    //             .body(SdkBody::from(r#"{"Attributes": {"id": {"S": "1"}, "name": {"S": "test1"}, "price": {"N": "1.5"}}}"#))
-    //             .unwrap(),
-    //     )]);
-    //     let client =
-    //         Client::from_conf_conn(get_mock_config().await, DynConnector::new(conn.clone()));
-    //     let store = DynamoDBStore::new(client, "test".to_string());
-    //     let product = Product {
-    //         id: "1".to_string(),
-    //         name: "test1".to_string(),
-    //         price: 1.5,
-    //     };
-
-    //     // WHEN putting an item
-    //     store.put(&product).await?;
-
-    //     // THEN the request matches the expected request
-    //     conn.assert_requests_match(&vec![]);
-
-    //     Ok(())
-    // }
-
-    // #[test]
-    // fn product_from_dynamodb() {
-    //     let mut value = HashMap::new();
-    //     value.insert("id".to_owned(), AttributeValue::S("id".to_owned()));
-    //     value.insert("name".to_owned(), AttributeValue::S("name".to_owned()));
-    //     value.insert("price".to_owned(), AttributeValue::N("1.0".to_owned()));
-
-    //     let test_run = TestRun::try_from(value).unwrap();
-    //     assert_eq!(test_run.id, "id");
-    //     assert_eq!(test_run.language, "language");
-    //     assert_eq!(test_run.payload, "name");
-    //     assert_eq!(test_run.status, );
-    // }
-
-    // #[test]
-    // fn product_to_dynamodb() -> Result<(), Error> {
-    //     let product = Product {
-    //         id: "id".to_owned(),
-    //         name: "name".to_owned(),
-    //         price: 1.5,
-    //     };
-
-    //     let value: HashMap<String, AttributeValue> = (&product).into();
-    //     assert_eq!(value.get("id").unwrap().as_s().unwrap(), "id");
-    //     assert_eq!(value.get("name").unwrap().as_s().unwrap(), "name");
-    //     assert_eq!(value.get("price").unwrap().as_n().unwrap(), "1.5");
-
-    //     Ok(())
-    // }
 }
